@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch Off Birthday Experience</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --baby-pink: #fce4ec;
+            --soft-mint: #88d3b8;
+            --deep-plum: #a83279;
+            --light-pink-card: #f8e1ee;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            width: 100vw;
+            background-color: var(--baby-pink);
+            user-select: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+        }
+
+        .hint-text {
+            position: absolute;
+            top: 8%;
+            font-size: 1rem;
+            color: var(--deep-plum);
+            font-weight: 600;
+            opacity: 0.85;
+            pointer-events: none;
+            text-align: center;
+            padding: 0 15px;
+            transition: opacity 0.4s ease;
+        }
+
+        .memory-container {
+            position: relative;
+            width: 260px;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .photo-card {
+            position: absolute;
+            width: 100%;
+            background-color: var(--white);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: 0 10px 25px rgba(168, 50, 121, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), 
+                        opacity 0.4s ease-out;
+            transform-origin: center center;
+        }
+
+        .photo-card:nth-child(1) { transform: rotate(-4deg) scale(1); z-index: 6; }
+        .photo-card:nth-child(2) { transform: rotate(3deg) scale(0.98); z-index: 5; }
+        .photo-card:nth-child(3) { transform: rotate(-2deg) scale(0.96); z-index: 4; }
+        .photo-card:nth-child(4) { transform: rotate(5deg) scale(0.94); z-index: 3; }
+        .photo-card:nth-child(5) { transform: rotate(-3deg) scale(0.92); z-index: 2; }
+        .photo-card:nth-child(6) { transform: rotate(2deg) scale(0.90); z-index: 1; }
+
+        .photo-card.swiped-left {
+            transform: translateX(-150%) rotate(-25deg) scale(0.8) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .photo-card.swiped-right {
+            transform: translateX(150%) rotate(25deg) scale(0.8) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            background-color: var(--light-pink-card);
+            border: 2px dashed #e1a3c7;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--deep-plum);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .photo-caption {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--deep-plum);
+            font-weight: 600;
+        }
+
+        .letter-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            pointer-events: none;
+            background-color: var(--white);
+            padding: 14px 28px;
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(168, 50, 121, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 8;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                        opacity 0.5s ease-out;
+            cursor: pointer;
+            width: max-content;
+            max-width: 85vw;
+        }
+
+        .letter-banner.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            color: var(--deep-plum);
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .letter-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--baby-pink);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 20px;
+        }
+
+        .letter-page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-card {
+            background-color: var(--white);
+            width: 100%;
+            max-width: 450px;
+            padding: 35px 25px 25px 25px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(168, 50, 121, 0.15);
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .letter-page.active .letter-card {
+            transform: translateY(0);
+        }
+
+        .letter-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.2rem, 7vw, 3rem);
+            color: var(--deep-plum);
+            margin-bottom: 15px;
+        }
+
+        .letter-body {
+            color: #7d335f;
+            font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .letter-signature {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(1.6rem, 5vw, 2rem);
+            color: var(--deep-plum);
+            margin-bottom: 25px;
+        }
+
+        .continue-btn {
+            background-color: var(--soft-mint);
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 12px 32px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(136, 211, 184, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+            60% { transform: translateY(-3px); }
+        }
+
+        /* Puzzle Page */
+        .puzzle-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--baby-pink);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 20px;
+        }
+
+        .puzzle-page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .puzzle-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(2rem, 6vw, 2.5rem);
+            color: var(--deep-plum);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .puzzle-container {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(168, 50, 121, 0.15);
+            align-items: center;
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .keypad-display {
+            width: 100%;
+            height: 55px;
+            background-color: var(--light-pink-card);
+            color: var(--deep-plum);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            letter-spacing: 12px;
+            border: 2px solid var(--soft-mint);
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .key-btn {
+            width: 100%;
+            aspect-ratio: 1;
+            background-color: var(--light-pink-card);
+            color: var(--deep-plum);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            border: 1px solid var(--soft-mint);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--soft-mint);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        .key-btn:active {
+            transform: translateY(3px);
+            box-shadow: none;
+            background-color: var(--soft-mint);
+            color: var(--white);
+        }
+
+        .hint-btn {
+            width: 100%;
+            margin-top: 20px;
+            background-color: var(--soft-mint);
+            color: var(--white);
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(136, 211, 184, 0.4);
+        }
+
+        .hint-btn:hover {
+            opacity: 0.9;
+        }
+
+        .hint-modal {
+            margin-top: 15px;
+            background-color: var(--light-pink-card);
+            border: 1px solid var(--soft-mint);
+            color: var(--deep-plum);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            text-align: center;
+            display: none;
+            width: 100%;
+            line-height: 1.5;
+        }
+
+        /* Singing Modal Overlay */
+        .sing-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .sing-modal.active {
+            display: flex;
+        }
+
+        .sing-card {
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(168, 50, 121, 0.2);
+        }
+
+        .sing-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: var(--deep-plum);
+            margin-bottom: 10px;
+        }
+
+        .mic-icon {
+            font-size: 3.5rem;
+            margin: 15px 0;
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .sing-instruction {
+            color: #7d335f;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .done-singing-btn {
+            background-color: var(--soft-mint);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(136, 211, 184, 0.5);
+        }
+
+        /* Flashback Memory Stage */
+        .flashback-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--baby-pink);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 20px;
+        }
+
+        .flashback-page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .flashback-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(2rem, 6vw, 2.6rem);
+            color: var(--deep-plum);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flashback-frame {
+            position: relative;
+            width: 270px;
+            height: 350px;
+            background-color: var(--white);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 15px 35px rgba(168, 50, 121, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flashback-image-area {
+            width: 100%;
+            height: 100%;
+            background-color: var(--light-pink-card);
+            border: 2px dashed var(--soft-mint);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--deep-plum);
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+        }
+
+        .progress-counter {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--deep-plum);
+            font-weight: 600;
+            background-color: var(--white);
+            padding: 4px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(168, 50, 121, 0.1);
+        }
+
+        /* Final Stage Page */
+        .final-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--baby-pink);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            padding: 20px;
+        }
+
+        .final-page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .final-card {
+            background-color: var(--white);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(168, 50, 121, 0.15);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .final-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            color: var(--deep-plum);
+            margin-bottom: 10px;
+        }
+
+        .final-subtitle {
+            color: #7d335f;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 10;
+        }
+
+        canvas.cleared {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hint-text" id="hintText">✨ Tap the photo to swipe it away ✨</div>
+
+    <div class="memory-container" id="memoryContainer">
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #1</div>
+            <div class="photo-caption">Memory 1</div>
+        </div>
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #2</div>
+            <div class="photo-caption">Memory 2</div>
+        </div>
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #3</div>
+            <div class="photo-caption">Memory 3</div>
+        </div>
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #4</div>
+            <div class="photo-caption">Memory 4</div>
+        </div>
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #5</div>
+            <div class="photo-caption">Memory 5</div>
+        </div>
+        <div class="photo-card">
+            <div class="photo-placeholder">Photo #6</div>
+            <div class="photo-caption">Memory 6</div>
+        </div>
+    </div>
+
+    <div class="letter-banner" id="letterBanner">
+        <div class="letter-text">Open letter from Bernett</div>
+    </div>
+
+    <div class="letter-page" id="letterPage">
+        <div class="letter-card">
+            <div class="letter-title">Happy Birthday!</div>
+            <div class="letter-body">
+                Wishing you the absolute best day filled with love, laughter, and pure happiness. May this new year bring you endless joy and all the amazing things you deserve!
+            </div>
+            <div class="letter-signature">With love, Bernett</div>
+            
+            <button class="continue-btn" id="continueBtn">Continue ✨</button>
+        </div>
+    </div>
+
+    <!-- Puzzle Page -->
+    <div class="puzzle-page" id="puzzlePage">
+        <div class="puzzle-title">Enter the Secret Code</div>
+        <div class="puzzle-container">
+            <div class="keypad-display" id="keypadDisplay">___</div>
+            <div class="keypad-grid">
+                <button class="key-btn" onclick="pressKey('A')">A</button>
+                <button class="key-btn" onclick="pressKey('B')">B</button>
+                <button class="key-btn" onclick="pressKey('C')">C</button>
+                <button class="key-btn" onclick="pressKey('D')">D</button>
+                <button class="key-btn" onclick="pressKey('E')">E</button>
+                <button class="key-btn" onclick="pressKey('H')">H</button>
+                <button class="key-btn" onclick="pressKey('M')">M</button>
+                <button class="key-btn" onclick="pressKey('P')">P</button>
+                <button class="key-btn" onclick="pressKey('R')">R</button>
+                <button class="key-btn" onclick="pressKey('S')">S</button>
+                <button class="key-btn" onclick="pressKey('T')">T</button>
+                <button class="key-btn" onclick="pressKey('Y')">Y</button>
+            </div>
+
+            <button class="hint-btn" id="hintBtn">🎤 Sing Happy Birthday for a hint!</button>
+            <div class="hint-modal" id="hintModal">
+                🔒 <b>Hint:</b><br>
+                What is the standard 3-letter abbreviation for <i>"Happy Birthday"</i>? 🎂
+            </div>
+        </div>
+    </div>
+
+    <!-- Singing Modal Overlay -->
+    <div class="sing-modal" id="singModal">
+        <div class="sing-card">
+            <div class="sing-title">Singing Time! 🎶</div>
+            <div class="mic-icon">🎤</div>
+            <div class="sing-instruction">Sing "Happy Birthday to you..." out loud, then click below!</div>
+            <button class="done-singing-btn" id="doneSingingBtn">✨ Done singing!</button>
+        </div>
+    </div>
+
+    <!-- Flashback Stage -->
+    <div class="flashback-page" id="flashbackPage">
+        <div class="flashback-title">Memories Flashback 📸</div>
+        <div class="flashback-frame">
+            <div class="flashback-image-area" id="flashbackImage">Photo #1</div>
+        </div>
+        <div class="progress-counter" id="progressCounter">1 / 18</div>
+    </div>
+
+    <div class="final-page" id="finalPage">
+        <div class="final-card">
+            <div class="final-title">The End of My Present 🎁</div>
+            <div class="final-subtitle">Thank you for being amazing! ✨</div>
+        </div>
+    </div>
+
+    <canvas id="scratchCanvas"></canvas>
+
+    <script>
+        const photoCards = Array.from(document.querySelectorAll('.photo-card'));
+        const letterBanner = document.getElementById('letterBanner');
+        const hintText = document.getElementById('hintText');
+        const letterPage = document.getElementById('letterPage');
+        const puzzlePage = document.getElementById('puzzlePage');
+        const flashbackPage = document.getElementById('flashbackPage');
+        const finalPage = document.getElementById('finalPage');
+        const memoryContainer = document.getElementById('memoryContainer');
+        const continueBtn = document.getElementById('continueBtn');
+        const keypadDisplay = document.getElementById('keypadDisplay');
+        const hintBtn = document.getElementById('hintBtn');
+        const hintModal = document.getElementById('hintModal');
+        const singModal = document.getElementById('singModal');
+        const doneSingingBtn = document.getElementById('doneSingingBtn');
+
+        if (hintBtn) {
+            hintBtn.addEventListener('click', () => {
+                singModal.classList.add('active');
+            });
+        }
+
+        if (doneSingingBtn) {
+            doneSingingBtn.addEventListener('click', () => {
+                singModal.classList.remove('active');
+                hintBtn.style.display = "none";
+                hintModal.style.display = "block";
+            });
+        }
+        
+        let activeIndex = 0;
+        const totalCards = photoCards.length;
+
+        photoCards.forEach((card, index) => {
+            card.addEventListener('click', () => {
+                if (index !== activeIndex) return;
+
+                const directionClass = index % 2 === 0 ? 'swiped-left' : 'swiped-right';
+                card.classList.add(directionClass);
+
+                activeIndex++;
+
+                if (activeIndex === totalCards) {
+                    hintText.style.opacity = '0';
+                    letterBanner.classList.add('show');
+                }
+            });
+        });
+
+        letterBanner.addEventListener('click', () => {
+            letterBanner.style.opacity = '0';
+            letterBanner.style.pointerEvents = 'none';
+            memoryContainer.style.opacity = '0';
+            letterPage.classList.add('active');
+        });
+
+        continueBtn.addEventListener('click', () => {
+            letterPage.classList.remove('active');
+            setTimeout(() => {
+                puzzlePage.classList.add('active');
+            }, 400);
+        });
+
+        let enteredCode = "";
+        const targetCode = "HBD"; 
+
+        function pressKey(letter) {
+            if (enteredCode.length < 3) {
+                enteredCode += letter;
+                updateDisplay();
+            }
+
+            if (enteredCode.length === 3) {
+                if (enteredCode === targetCode) {
+                    keypadDisplay.style.color = "#88d3b8";
+                    keypadDisplay.style.borderColor = "#88d3b8";
+                    setTimeout(() => {
+                        puzzlePage.classList.remove('active');
+                        setTimeout(() => {
+                            startFlashback();
+                        }, 400);
+                    }, 600);
+                } else {
+                    keypadDisplay.style.color = "#a83279";
+                    keypadDisplay.style.borderColor = "#a83279";
+                    setTimeout(() => {
+                        enteredCode = "";
+                        updateDisplay();
+                        keypadDisplay.style.color = "#a83279";
+                        keypadDisplay.style.borderColor = "#88d3b8";
+                    }, 800);
+                }
+            }
+        }
+
+        function updateDisplay() {
+            let padded = enteredCode.padEnd(3, '_');
+            keypadDisplay.innerText = padded;
+        }
+
+        function playRecapSong() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            
+            const audioCtx = new AudioContext();
+            
+            const notes = [
+                264, 264, 297, 264, 352, 330,
+                264, 264, 297, 264, 396, 352,
+                264, 264, 528, 440, 352, 330, 297,
+                466, 466, 440, 352, 396, 352
+            ];
+
+            let noteIdx = 0;
+
+            function playNextNote() {
+                if (!flashbackPage.classList.contains('active')) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(notes[noteIdx % notes.length], audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.45);
+
+                noteIdx++;
+                setTimeout(playNextNote, 400);
+            }
+
+            playNextNote();
+        }
+
+        function startFlashback() {
+            flashbackPage.classList.add('active');
+            playRecapSong();
+
+            const flashbackImage = document.getElementById('flashbackImage');
+            const progressCounter = document.getElementById('progressCounter');
+            
+            const totalMemories = 18;
+            let index = 1;
+            progressCounter.innerText = `1 / ${totalMemories}`;
+            
+            const interval = setInterval(() => {
+                index++;
+                if (index <= totalMemories) {
+                    flashbackImage.style.opacity = '0';
+                    setTimeout(() => {
+                        flashbackImage.innerText = `Photo #${index}`;
+                        progressCounter.innerText = `${index} / ${totalMemories}`;
+                        flashbackImage.style.opacity = '1';
+                    }, 150);
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        flashbackPage.classList.remove('active');
+                        setTimeout(() => {
+                            finalPage.classList.add('active');
+                        }, 500);
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isScratching = false;
+        let isFullyRevealed = false;
+        let lastPoint = null;
+
+        document.fonts.ready.then(() => {
+            resizeCanvas();
+        });
+
+        function drawOverlay() {
+            if (isFullyRevealed) return;
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#88d3b8';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const fontSize = Math.min(canvas.width * 0.15, 120);
+            ctx.font = `${fontSize}px 'Great Vibes', cursive`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+            ctx.shadowBlur = 20;
+            ctx.fillText('Open Me', x, y);
+
+            ctx.shadowBlur = 0;
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawOverlay();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches.length > 0) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function startScratch(e) {
+            if (isFullyRevealed) return;
+            isScratching = true;
+            lastPoint = getCoordinates(e);
+            scratch(e);
+        }
+
+        function stopScratch() {
+            if (!isScratching) return;
+            isScratching = false;
+            lastPoint = null;
+            checkScratchPercentage();
+        }
+
+        function scratch(e) {
+            if (!isScratching || isFullyRevealed) return;
+
+            const currentPoint = getCoordinates(e);
+
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 140;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            if (lastPoint) {
+                ctx.moveTo(lastPoint.x, lastPoint.y);
+                ctx.lineTo(currentPoint.x, currentPoint.y);
+            } else {
+                ctx.moveTo(currentPoint.x, currentPoint.y);
+                ctx.lineTo(currentPoint.x, currentPoint.y);
+            }
+            ctx.stroke();
+
+            lastPoint = currentPoint;
+        }
+
+        function checkScratchPercentage() {
+            if (isFullyRevealed) return;
+
+            const stride = 16; 
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparentPixels = 0;
+            let totalSampled = 0;
+
+            for (let i = 3; i < pixels.length; i += 4 * stride) {
+                totalSampled++;
+                if (pixels[i] === 0) {
+                    transparentPixels++;
+                }
+            }
+
+            const percentageScratched = (transparentPixels / totalSampled) * 100;
+
+            if (percentageScratched >= 12) {
+                isFullyRevealed = true;
+                canvas.classList.add('cleared');
+            }
+        }
+
+        canvas.addEventListener('mousedown', startScratch);
+        canvas.addEventListener('mouseup', stopScratch);
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('mouseleave', stopScratch);
+
+        canvas.addEventListener('touchstart', startScratch, { passive: true });
+        canvas.addEventListener('touchend', stopScratch);
+        canvas.addEventListener('touchmove', scratch, { passive: true });
+    </script>
+
+</body>
+</html>
